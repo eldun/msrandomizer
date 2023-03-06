@@ -1,5 +1,5 @@
 import argparse
-import os, shutil, random, sys
+import os, shutil, random, re, sys
 
 
 KIT_COUNT = 25
@@ -21,6 +21,9 @@ def init_argparse() -> argparse.ArgumentParser:
                         help='The number of output folders(\'kits\') to create. Default: ' + str(KIT_COUNT))
     return parser
 
+
+def remove_leading_non_alphanumeric_characters(input_string):
+    return re.sub(r'^[^a-zA-Z0-9]*', '', input_string)
 
 
 def generate_kits(args) -> None:
@@ -60,27 +63,29 @@ def generate_kits(args) -> None:
             files = [os.path.join(path, filename)
                 for path, dirs, files in os.walk(source)
                 for filename in files]
-            random_file = random.choice(files)
+            random_file_path = random.choice(files)
 
             # Only grab audio files
-            if (os.path.isfile(random_file) and 
-                random_file.lower().endswith(('.wav', '.mp3', '.aiff'))):
+            if (os.path.isfile(random_file_path) and 
+                random_file_path.lower().endswith(('.wav', '.mp3', '.aiff'))):
 
-                shutil.copy(random_file, output_folder)
+                renamed_file_basename = remove_leading_non_alphanumeric_characters(os.path.basename(random_file_path))
+                renamed_file_path = os.path.join(output_folder, renamed_file_basename)
+                shutil.copy(random_file_path, os.path.join(output_folder, renamed_file_basename))
 
-                copied_string = os.path.basename(random_file) + ' copied to ' + kit_folder
-                cumulative_size += os.path.getsize(random_file)
+                copied_string = random_file_path + ' copied to ' + kit_folder
+                cumulative_size += os.path.getsize(random_file_path)
                 cumulative_size_string = '{:.2f} {}'.format(cumulative_size/1024.0/1024.0, 'MiB copied')
 
                 # Columnated console output
-                print(f'{copied_string:<50}{"":<10}{cumulative_size_string:<}'  )
+                print(f'{copied_string:<120}{"":<10}{cumulative_size_string:<}'  )
 
                 samples_added += 1
 
             else:
                 attempts +=1
 
-
+        print('\n')
         current_kit_label = current_kit_label + 1
 
 
@@ -89,6 +94,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
     generate_kits(args)
-
-
 
