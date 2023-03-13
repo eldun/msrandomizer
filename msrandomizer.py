@@ -26,6 +26,7 @@ def remove_leading_non_alphanumeric_characters(input_string):
     return re.sub(r'^[^a-zA-Z0-9]*', '', input_string)
 
 
+
 def generate_kits(args) -> None:
     random_source = lambda: random.choice(args.sources)
     dest = args.dest[0]
@@ -53,37 +54,43 @@ def generate_kits(args) -> None:
         os.mkdir(output_folder)
 
         while samples_added < KIT_SIZE:
-            if attempts > MAX_ATTEMPTS:
-                exit_string = str.format('The maximum number of attempts({}) for creating a kit has been reached.', MAX_ATTEMPTS)
-                sys.exit(exit_string)
 
             source = random_source() # Randomly choose a new source dir each iteration
 
-            # Pick random file
-            files = [os.path.join(path, filename)
-                for path, dirs, files in os.walk(source)
-                for filename in files]
-            random_file_path = random.choice(files)
+            # Build list of files
+            audio_files = []
+            for path, subdirs, files in os.walk(source):
+                for file in files:
 
-            # Only grab audio files
-            if (os.path.isfile(random_file_path) and 
-                random_file_path.lower().endswith(('.wav', '.mp3', '.aiff'))):
 
-                renamed_file_basename = remove_leading_non_alphanumeric_characters(os.path.basename(random_file_path))
-                renamed_file_path = os.path.join(output_folder, renamed_file_basename)
-                shutil.copy(random_file_path, os.path.join(output_folder, renamed_file_basename))
+                    # Only grab audio files
+                    if file.lower().endswith(('.wav', '.mp3', '.aiff')):
+                        audio_files.append(os.path.join(path, file))
 
-                copied_string = random_file_path + ' copied to ' + kit_folder
-                cumulative_size += os.path.getsize(random_file_path)
-                cumulative_size_string = '{:.2f} {}'.format(cumulative_size/1024.0/1024.0, 'MiB copied')
+            random_file_path = random.choice(audio_files)
+            random_file = os.path.basename(random_file_path)
 
-                # Columnated console output
-                print(f'{copied_string:<120}{"":<10}{cumulative_size_string:<}'  )
+            root, ext =  os.path.splitext(random_file)
 
-                samples_added += 1
+            
 
-            else:
-                attempts +=1
+            renamed_output_file = remove_leading_non_alphanumeric_characters(root)
+
+            # Add 1-6 suffix to accomodate how the Model:Samples loads kits
+            renamed_output_file = f"{renamed_output_file}-{samples_added+1}{ext}"
+            
+            renamed_output_file_path = os.path.join(output_folder, renamed_output_file)
+            shutil.copy(random_file_path, os.path.join(output_folder, renamed_output_file))
+
+            cumulative_size += os.path.getsize(random_file_path)
+            cumulative_size_string = '{:.2f} {}'.format(cumulative_size/1024.0/1024.0, 'MiB copied')
+
+            # Columnated console output
+            renamed_output_file = f'\'{renamed_output_file}\'' # You can't put backslashes inside of f-string braces, so I inserted them here
+            print(f'{random_file_path:<100} copied to \'{kit_folder}\' {"":<10}as {renamed_output_file:<30}  {cumulative_size_string:>30}'  )
+
+            samples_added += 1
+
 
         print('\n')
         current_kit_label = current_kit_label + 1
