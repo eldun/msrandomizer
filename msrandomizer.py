@@ -73,7 +73,7 @@ def generate_kits(args) -> None:
             root, ext =  os.path.splitext(random_file)
 
             
-
+            # Un-hide files that start with '.', as well as make files more legible
             renamed_output_file = remove_leading_non_alphanumeric_characters(root)
 
             # Add 1-6 suffix to accomodate how the Model:Samples loads kits
