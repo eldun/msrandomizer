@@ -77,7 +77,7 @@ def generate_kits(args) -> None:
             renamed_output_file = remove_leading_non_alphanumeric_characters(root)
 
             # Add 1-6 suffix to accomodate how the Model:Samples loads kits
-            renamed_output_file = f"{renamed_output_file}-{samples_added+1}{ext}"
+            renamed_output_file = f"{renamed_output_file}-{samples_added+1}"
             
             renamed_output_file_path = os.path.join(output_folder, renamed_output_file)
             shutil.copy(random_file_path, os.path.join(output_folder, renamed_output_file))
